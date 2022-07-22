@@ -63,30 +63,20 @@ void TD_LogWatchDINT(struct TD_LogWatchDINT* inst)
 				inst->fbLogWrite.Execute = 1;
 				inst->Busy = 1;
 				TD_LogWrite( &inst->fbLogWrite );
-				inst->step = 20;
+				if( inst->fbLogWrite.Done ){
+					inst->Busy = 0;
+					inst->fbLogWrite.Execute = 0; /* reset fb */
+					TD_LogWrite( &inst->fbLogWrite );
+				}
+				else if( inst->fbLogWrite.Error ){
+					inst->Busy = 0;
+					inst->StatusID = inst->fbLogWrite.StatusID;
+					inst->fbLogWrite.Execute = 0;
+					TD_LogWrite( &inst->fbLogWrite );
+					inst->step = 9999;				
+				}
 			}			
 			break;
-
-
-			case 20: /* write into log */
-			if( inst->fbLogWrite.Done ){
-				inst->Busy = 0;
-				inst->fbLogWrite.Execute = 0;
-				TD_LogWrite( &inst->fbLogWrite );
-				inst->step = 10;
-			}
-			else if( inst->fbLogWrite.Error ){
-				inst->Busy = 0;
-				inst->StatusID = inst->fbLogWrite.StatusID;
-				inst->fbLogWrite.Execute = 0;
-				TD_LogWrite( &inst->fbLogWrite );
-				inst->step = 9999;				
-			}
-			else {
-				TD_LogWrite( &inst->fbLogWrite );
-			}
-			break;
-
 
 			case 9999: /* error */
 			inst->Valid = 0;

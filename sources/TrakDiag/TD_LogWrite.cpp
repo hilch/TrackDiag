@@ -54,7 +54,7 @@ void TD_LogWrite(struct TD_LogWrite* inst)
 			ArEventLogGetIdent( &inst->fbLogGetIdent );
 			if( inst->fbLogGetIdent.Done ){ /* ArEventLogGetIdent is executed synchronously ! */
 				std::memset( &inst->fbLogWrite, 0, sizeof(inst->fbLogWrite) );
-
+				ArEventLogWrite( &inst->fbLogWrite ); /* reset fb */
 				inst->fbLogWrite.Ident = inst->fbLogGetIdent.Ident;
 				inst->fbLogWrite.EventID = inst->EventID;
 				inst->fbLogWrite.OriginRecordID = 0;
@@ -63,15 +63,17 @@ void TD_LogWrite(struct TD_LogWrite* inst)
 				inst->fbLogWrite.AddDataFormat = arEVENTLOG_ADDFORMAT_TEXT;
 				std::strcpy( (char*) &inst->fbLogWrite.ObjectID, (char*) &inst->ObjectID );
 				inst->fbLogWrite.TimeStamp = 0;
+				inst->fbLogWrite.Execute = 1;
 
 				inst->fbLogGetIdent.Execute = 0; /* reset fb */
 				ArEventLogGetIdent( &inst->fbLogGetIdent );	
 
-				inst->fbLogWrite.Execute = 1;
 				ArEventLogWrite( &inst->fbLogWrite );
 				if( inst->fbLogWrite.Done ){ /* ArEventLogWrite is executed synchronously !  */
 					inst->fbLogWrite.Execute = 0; /* reset fb */
 					ArEventLogWrite( &inst->fbLogWrite );
+					inst->Busy = 0;
+					inst->Done = 1;
 					inst->step = 100;
 				}
 				else if( inst->fbLogWrite.Error ){
@@ -120,8 +122,7 @@ void TD_LogWrite(struct TD_LogWrite* inst)
 			
 
 			case 100: /* done */
-			inst->Busy = 0;
-			inst->Done = 1;
+
 			break;
 
 

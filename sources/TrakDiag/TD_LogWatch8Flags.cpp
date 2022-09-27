@@ -58,30 +58,35 @@ void TD_LogWatch8Flags(struct TD_LogWatch8Flags* inst)
 			case 10: /* check signal */
 			inst->Valid = 1;
 			if( inst->Signal != inst->signalOld){
-				USINT changeMask = inst->Signal ^ inst->signalOld;
-				inst->signalOld = inst->Signal;
+
 				std::strcpy( (char*) inst->fbLogWrite.ObjectID, (char*) inst->SignalName );
 				std::strcpy( (char*) inst->fbLogWrite.Ascii, "" );
 				for( int n = 7; n>=0 ; --n ){
 					if( inst->Flag[n][0] ){  /* flag used ? */
 						char f[sizeof(inst->Flag[0])];
+						bool bit = !!(inst->Signal & 1<<n);
+						bool bitOld = !!(inst->signalOld & 1<<n);
+
 						std::memset( (void*) &f, 0, sizeof(f) );
-						if( inst->Signal & (1<<n) ) {
+						/* use upper case letters for TRUE and lower case for FALSE */
+						if( bit ) {
 							std::transform( &inst->Flag[n][0], &inst->Flag[n][8], f, std::toupper );
 						}
 						else {
 							std::transform( &inst->Flag[n][0], &inst->Flag[n][8], f, std::tolower );
 						}
-						if( changeMask & (1<<n) ) {
+						/* add a star '*' as prefix if flag was changed */
+						if( bit != bitOld ){
 							std::strcat( (char*) inst->fbLogWrite.Ascii, "*" );
 						}
 						else {
 							std::strcat( (char*) inst->fbLogWrite.Ascii, " " );
 						}
 						std::strcat( (char*) inst->fbLogWrite.Ascii, f );
-
+						std::strcat( (char*) inst->fbLogWrite.Ascii, " " );
 					}
 				}
+				inst->signalOld = inst->Signal;
 				inst->fbLogWrite.EventID = inst->EventID;
 				inst->fbLogWrite.Execute = 1;
 				inst->Busy = 1;
